@@ -51,28 +51,16 @@ async function run() {
     });
 
    // Register a participant for a camp
-app.post('/api/register-participant', async (req, res) => {
-      try {
-        const participantInfo = req.body;
-        await participantCollection.insertOne(participantInfo);
-
- // Update participant count for the camp
-        await campCollection.updateOne(
-          { _id: participantInfo.campId },
-          { $inc: { participantCount: 1 } }
-        );
-
- res.status(201).send('Participant registered successfully');
-      } catch (error) {
-        console.error(error);
-        res.status(500).send('Error registering participant');
-      }
-    });
 
 
 
 
-
+ app.post('/participant', async (req, res) => {
+      const addAll = req.body;
+      console.log(addAll);
+      const result = await participantCollection.insertOne(addAll);
+      res.send(result);
+  });
 
 
     // Connect the client to the server	(optional starting in v4.7)
