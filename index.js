@@ -39,15 +39,15 @@ const client = new MongoClient(uri, {
 
 
 // Middleware to authenticate organizer
-const authenticateOrganizer = (req, res, next) => {
-  // In a real-world application, you'd verify the organizer's identity
-  // Here, we'll mock the authentication and set a dummy organizer ID
-  req.organizerId = req.headers['organizer-id']; // Normally, you'd use a token or session to identify the user
-  if (!req.organizerId) {
-    return res.status(401).send('Unauthorized');
-  }
-  next();
-};
+// const authenticateOrganizer = (req, res, next) => {
+//   // In a real-world application, you'd verify the organizer's identity
+//   // Here, we'll mock the authentication and set a dummy organizer ID
+//   req.organizerId = req.headers['organizer-id']; // Normally, you'd use a token or session to identify the user
+//   if (!req.organizerId) {
+//     return res.status(401).send('Unauthorized');
+//   }
+//   next();
+// };
 
 
 
@@ -55,11 +55,31 @@ const authenticateOrganizer = (req, res, next) => {
 
 async function run() {
   try {
+
+    // user data save 
+       const userCollection = client.db("MedicalCamp").collection("users");
     // all data loaded collection
     const campCollection = client.db("MedicalCamp").collection("AllCampData");
     const participantCollection = client.db("MedicalCamp").collection("Participants");
-   
+   const organizerCollection = client.db("MedicalCamp").collection("Organizers");
 
+    
+    // users related api
+
+    app.post('/users', async (req, res) => {
+      const userInfo = req.body;
+      const query = { email: userInfo.email };
+      const existingUser = await userCollection.findOne(query);
+      if (existingUser) {
+        return res.send({ message: 'user already exists', insertedId: null });
+      }
+      const result = await userCollection.insertOne(userInfo);
+      res.send(result);
+    })
+    
+    
+    
+    
     // Get all camp data
     app.get('/allData', async (req, res) => {
       const result = await campCollection.find().toArray();
@@ -76,6 +96,8 @@ async function run() {
       res.send(result);
   });
 
+    
+
        app.get('/allParticipant', async (req, res) => {
       const result = await participantCollection.find().toArray();
       res.send(result);
@@ -88,7 +110,7 @@ async function run() {
 
 
 // Get organizer profile
-    app.get('/organizer/profile', authenticateOrganizer, async (req, res) => {
+    app.get('/organizer/profile',  async (req, res) => {
       try {
         const organizerId = req.organizerId;
         const organizer = await organizerCollection.findOne({ _id: new ObjectId(organizerId) });
@@ -103,7 +125,7 @@ async function run() {
     });
 
     // Update organizer profile
-    app.put('/organizer/profile', authenticateOrganizer, async (req, res) => {
+    app.put('/organizer/profile',  async (req, res) => {
       try {
         const organizerId = req.organizerId;
         const { name, email, phone, image } = req.body;
