@@ -2,7 +2,7 @@ const express = require('express');
 const app = express();
 const cors = require('cors');
 require('dotenv').config()
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 
 
 
@@ -17,8 +17,6 @@ app.use(express.json());
 
 
 
-// medical-camp
-// V5NOVcMY-Sfaxg5ZF
 
 
 
@@ -33,21 +31,6 @@ const client = new MongoClient(uri, {
     deprecationErrors: true,
   }
 });
-
-
-// Create a MongoClient with a MongoClientOptions object to set the Stable API version
-
-
-// Middleware to authenticate organizer
-// const authenticateOrganizer = (req, res, next) => {
-//   // In a real-world application, you'd verify the organizer's identity
-//   // Here, we'll mock the authentication and set a dummy organizer ID
-//   req.organizerId = req.headers['organizer-id']; // Normally, you'd use a token or session to identify the user
-//   if (!req.organizerId) {
-//     return res.status(401).send('Unauthorized');
-//   }
-//   next();
-// };
 
 
 
@@ -97,12 +80,67 @@ async function run() {
   });
 
     
+       // Add camp data 
+ app.post('/allData', async (req, res) => {
+      const addAll = req.body;
+      const result = await campCollection.insertOne(addAll);
+      res.send(result);
+  });
+
+    //get allParticipant data
 
        app.get('/allParticipant', async (req, res) => {
       const result = await participantCollection.find().toArray();
       res.send(result);
     });
     
+
+
+
+
+
+let camps = []; // In-memory data storage for simplicity
+
+// Fetch all camps
+app.get('/allData', (req, res) => {
+  res.status(200).json(camps);
+});
+
+// Get camp by ID
+app.get('/allData/:campId', (req, res) => {
+  const camp = camps.find(c => c.id === req.params.campId);
+  if (camp) {
+    res.status(200).json(camp);
+  } else {
+    res.status(404).json({ message: 'Camp not found' });
+  }
+});
+
+// Add a new camp
+app.post('/allData', (req, res) => {
+  const newCamp = { ...req.body, id: Date.now().toString() };
+  camps.push(newCamp);
+  res.status(201).json(newCamp);
+});
+
+// Update a camp by ID
+app.put('/update-camp/:campId', (req, res) => {
+  const campIndex = camps.findIndex(c => c.id === req.params.campId);
+  if (campIndex > -1) {
+    camps[campIndex] = { ...camps[campIndex], ...req.body };
+    res.status(200).json(camps[campIndex]);
+  } else {
+    res.status(404).json({ message: 'Camp not found' });
+  }
+});
+
+// Delete a camp by ID
+ app.delete('/carts/:id', async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await campCollection.deleteOne(query);
+      res.send(result);
+    });
 
 
 
