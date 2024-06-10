@@ -74,7 +74,7 @@ async function run() {
    // Register a participant for a camp
  app.post('/participant', async (req, res) => {
       const addAll = req.body;
-      console.log(participant);
+      // console.log(participant);
       const result = await participantCollection.insertOne(addAll);
       res.send(result);
   });
