@@ -89,12 +89,19 @@ async function run() {
 
     //get allParticipant data
 
-       app.get('/allParticipant', async (req, res) => {
+    app.get('/allParticipantDash', async (req, res) => {
+      
+     
       const result = await participantCollection.find().toArray();
       res.send(result);
     });
     
-
+  app.get('/allParticipant', async (req, res) => {
+      const email = req.query.email;
+      const query = { email: email };
+      const result = await participantCollection.find(query).toArray();
+      res.send(result);
+    });
 
 
 
