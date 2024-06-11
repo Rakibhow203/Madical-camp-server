@@ -49,6 +49,13 @@ async function run() {
     
     // users related api
 
+
+ app.get('/users', async (req, res) => {
+      const result = await userCollection.find().toArray();
+      res.send(result);
+    });
+
+
     app.post('/users', async (req, res) => {
       const userInfo = req.body;
       const query = { email: userInfo.email };
@@ -90,8 +97,6 @@ async function run() {
     //get allParticipant data
 
     app.get('/allParticipantDash', async (req, res) => {
-      
-     
       const result = await participantCollection.find().toArray();
       res.send(result);
     });
