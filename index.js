@@ -6,21 +6,11 @@ const jwt = require('jsonwebtoken');
 require('dotenv').config()
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 
-
-
-
 const port = process.env.PORT || 5000;
-
-
 
 // middleware
 app.use(cors());
 app.use(express.json());
-
-
-
-
-
 
 // MongoDB connection URI
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.6exc3xw.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
@@ -89,14 +79,52 @@ async function run() {
       next();
     }
 
+
+    //admin check 
+ app.get('/users/admin/:email', verifyToken, async (req, res) => {
+      const email = req.params.email;
+
+      if (email !== req.decoded.email) {
+        return res.status(403).send({ message: 'forbidden access' })
+      }
+
+      const query = { email: email };
+      const user = await userCollection.findOne(query);
+      let admin = false;
+      if (user) {
+        admin = user?.role === 'admin';
+      }
+      res.send({ admin });
+    })
+
+
+
+
+
     // users related api
-    app.get('/users', async (req, res) => {
+  app.post('/users', async (req, res) => {
+      const userInfo = req.body;
+      const query = { email: userInfo.email };
+      const existingUser = await userCollection.findOne(query);
+      if (existingUser) {
+        return res.send({ message: 'user already exists', insertedId: null });
+      }
+      const result = await userCollection.insertOne(userInfo);
+      res.send(result);
+    })
+    
+
+
+    app.get('/users', verifyToken, async (req, res) => {
 
       const result = await userCollection.find().toArray();
       res.send(result);
  });
     
     
+    
+    
+    //make admin 
  app.patch('/users/admin/:id', verifyToken, verifyAdmin, async (req, res) => {
       const id = req.params.id;
       const filter = { _id: new ObjectId(id) };
@@ -109,12 +137,8 @@ async function run() {
       res.send(result);
     })
 
-    
 
-    
-    
-    
- app.delete('/users/:id', verifyToken, verifyAdmin, async (req, res) => {
+ app.delete('/users/:id',verifyToken, verifyAdmin,  async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) }
       const result = await userCollection.deleteOne(query);
@@ -123,17 +147,7 @@ async function run() {
     
     
 
-    app.post('/users', async (req, res) => {
-      const userInfo = req.body;
-      const query = { email: userInfo.email };
-      const existingUser = await userCollection.findOne(query);
-      if (existingUser) {
-        return res.send({ message: 'user already exists', insertedId: null });
-      }
-      const result = await userCollection.insertOne(userInfo);
-      res.send(result);
-    })
-    
+  
     
   
     // Get all camp data
@@ -244,13 +258,10 @@ app.put('/update-camp/:campId', (req, res) => {
     app.put('/organizer/profile',  async (req, res) => {
       try {
         const organizerId = req.organizerId;
-        const { name, email, phone, image } = req.body;
+        const { displayName, email, photoURL, phoneNumber } = req.body;
         
         const updatedProfile = {
-          name,
-          email,
-          phone,
-          image
+         displayName, email, photoURL, phoneNumber
         };
 
         const result = await organizerCollection.updateOne(
