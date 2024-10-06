@@ -37,8 +37,7 @@ async function run() {
     const campCollection = client.db("MedicalCamp").collection("AllCampData");
     const participantCollection = client.db("MedicalCamp").collection("Participants");
    const organizerCollection = client.db("MedicalCamp").collection("Organizers");
-
-    
+    const doctorList = client.db("MedicalCamp").collection("doctor'sList's")
     
     
 
@@ -115,7 +114,7 @@ async function run() {
     
 
 
-    app.get('/users', verifyToken, async (req, res) => {
+    app.get('/users', verifyToken, verifyAdmin, async (req, res) => {
 
       const result = await userCollection.find().toArray();
       res.send(result);
@@ -156,6 +155,12 @@ async function run() {
       res.send(result);
     });
 
+
+ // Get all camp doctor
+    app.get('/allDoctor', async (req, res) => {
+      const result = await doctorList.find().toArray();
+      res.send(result);
+    });
 
 
    // Register a participant for a camp
@@ -293,13 +298,7 @@ app.put('/update-camp/:campId', (req, res) => {
 
 
 
-    // Connect the client to the server	
-    // await client.connect();
-    // Send a ping to confirm a successful connection
-    await client.db("admin").command({ ping: 1 });
-    console.log("Pinged your deployment. You successfully connected to MongoDB!");
-
-
+    
 
 
 
